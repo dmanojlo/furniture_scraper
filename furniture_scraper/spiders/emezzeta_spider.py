@@ -54,13 +54,17 @@ class EmezzetaSpider(scrapy.Spider):
 class MimaSpider(scrapy.Spider):
     name = 'mima'
 
-    start_urls = ['https://namjestaj-mima.hr/proizvodi/?with_qty=0&only_available=0&categories=4398&price=0&price-e=26999&searchcode=basic&searchid=3&discount=1&to_page=2']
+    start_urls = ['https://namjestaj-mima.hr/proizvodi/?searchcode=basic&searchid=3&with_qty=0&discount=1&only_available=0&categories=4398&price=0&price-e=26999&search_q=&to_page=2']
 
     custom_settings = { 'FEEDS': {'mima_result.json': {'format': 'json', 'overwrite': True}}}
 
     def parse(self, response):
-        for kutne in response.css('div.cp'):
-            yield{'kutne_mima': kutne.css('h2.cp-title::text').get()}
+        for kutne in response.css('div#items_catalog .cp'):
+            if kutne.css('div.cp-old-price'):
+                yield{'kutne_mima': kutne.css('h2.cp-title::text').get(),
+                      'old_price': kutne.css('div.cp-old-price::text').get(),
+                      'discount_price': kutne.css('div.cp-discount-price::text').get()
+                     }
 
 
 # process = CrawlerProcess()
