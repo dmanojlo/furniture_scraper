@@ -67,6 +67,24 @@ class MimaSpider(scrapy.Spider):
                      }
 
 
+class LesninaSpider(scrapy.Spider):
+    name = 'lesnina'
+
+    start_urls = ['https://www.xxxlesnina.hr/api/graphql?operationName=search&variables=%7B%22cid%22%3Anull%2C%22encodedFhLink%22%3A%22null%22%2C%22filters%22%3A%22%5B%7B%5C%22id%5C%22%3A%5C%22categories%5C%22%2C%5C%22type%5C%22%3A%5C%22categoryFilter%5C%22%2C%5C%22values%5C%22%3A%5B%5C%22C1%5C%22%2C%5C%22C1C1%5C%22%2C%5C%22C1C1C1%5C%22%5D%7D%2C%7B%5C%22id%5C%22%3A%5C%22v_atrm_uklju_eno_u_cijenu%5C%22%2C%5C%22type%5C%22%3A%5C%22multiSelectFilter%5C%22%2C%5C%22elementId%5C%22%3A%5C%22funkcija_kreveta%5C%22%2C%5C%22values%5C%22%3A%5B%5C%22funkcija_kreveta%5C%22%5D%7D%2C%7B%5C%22id%5C%22%3A%5C%22v_eyecatcher%5C%22%2C%5C%22type%5C%22%3A%5C%22multiSelectFilter%5C%22%2C%5C%22elementId%5C%22%3A%5C%22bestprice-sale%5C%22%2C%5C%22values%5C%22%3A%5B%5C%22bestprice%5C%22%2C%5C%22sale%5C%22%5D%7D%5D%22%2C%22pagination%22%3A%22%7B%5C%22page%5C%22%3A1%2C%5C%22numberOfResults%5C%22%3A60%7D%22%2C%22sortBy%22%3A%22%5C%22popular%5C%22%22%2C%22searchTerm%22%3A%22%5C%22%5C%22%22%2C%22type%22%3Anull%7D&extensions=%7B%22persistedQuery%22%3A%7B%22version%22%3A1%2C%22sha256Hash%22%3A%22b6f527bf074c162f0fe9dd316c2d9144a159f15ac6a8d323e8ffc4da98914152%22%7D%7D']
+
+
+    custom_settings = { 'FEEDS': {'lesnina_result.json': {'format': 'json', 'overwrite': True}}}
+
+    def parse(self, response):
+        data = response.json()
+        search_res = data['data']['search']['searchResults']
+        for i in range(len(search_res)):
+            if search_res[i]['priceData']['oldPrice']:
+                yield{'kutne_lesnina': search_res[i]['name'].strip(),
+                      'old_price': search_res[i]['priceData']['oldPrice']['value'],
+                      'discount_price': search_res[i]['priceData']['currentPrice']['value'],
+                    }
+
 # process = CrawlerProcess()
 # process.crawl(MySpider1)
 # process.crawl(MySpider2)
