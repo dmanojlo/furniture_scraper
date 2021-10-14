@@ -25,13 +25,13 @@ class EmezzetaSpider(scrapy.Spider):
         if 'dnevni' in response.url:
             for desne in response.css('div.product-item-info'):
                 if desne.css('span.clearance-icon::text') or desne.css('span.action-icon::text'):
-                    yield{'kutne_garniture': desne.css('a.product-item-link::text').get().strip(),
+                    yield{'item_name': desne.css('a.product-item-link::text').get().strip(),
                           'regular_price': desne.css('span.old-price .price::text').get(),
                           'discount_price': desne.css('span.price::text').get(),
                         }
 
                 else:
-                    yield{'kutne_garniture': desne.css('a.product-item-link::text').get().strip(),
+                    yield{'item_name': desne.css('a.product-item-link::text').get().strip(),
                           'regular_price': desne.css('span.price::text').get(),
                           'discount_price': desne.css('span.loyalty-price .price::text').get(),
                         }
@@ -39,13 +39,13 @@ class EmezzetaSpider(scrapy.Spider):
         if 'kuhinja' in response.url:
             for kitchen in response.css('div.product-item-info'):
                 if kitchen.css('span.clearance-icon::text') or kitchen.css('span.action-icon::text'):
-                    yield{'kuhinja': kitchen.css('a.product-item-link::text').get().strip(),
+                    yield{'item_name': kitchen.css('a.product-item-link::text').get().strip(),
                           'regular_price': kitchen.css('span.old-price .price::text').get(),
                           'discount_price': kitchen.css('span.price::text').get(),
                         }
 
                 else:
-                    yield{'kuhinja': kitchen.css('a.product-item-link::text').get().strip(),
+                    yield{'item_name': kitchen.css('a.product-item-link::text').get().strip(),
                           'regular_price': kitchen.css('span.price::text').get(),
                           'discount_price': kitchen.css('span.loyalty-price .price::text').get(),
                         }
@@ -61,7 +61,7 @@ class MimaSpider(scrapy.Spider):
     def parse(self, response):
         for kutne in response.css('div#items_catalog .cp'):
             if kutne.css('div.cp-old-price'):
-                yield{'kutne_mima': kutne.css('h2.cp-title::text').get(),
+                yield{'item_name': kutne.css('h2.cp-title::text').get(),
                       'old_price': kutne.css('div.cp-old-price::text').get(),
                       'discount_price': kutne.css('div.cp-discount-price::text').get()
                      }
@@ -79,11 +79,51 @@ class LesninaSpider(scrapy.Spider):
         data = response.json()
         search_res = data['data']['search']['searchResults']
         for i in range(len(search_res)):
-            if search_res[i]['priceData']['oldPrice']:
-                yield{'kutne_lesnina': search_res[i]['name'].strip(),
-                      'old_price': search_res[i]['priceData']['oldPrice']['value'],
-                      'discount_price': search_res[i]['priceData']['currentPrice']['value'],
-                    }
+            if 'priceData' in search_res[i]:
+                if search_res[i]['priceData']['oldPrice']:
+                    yield{'item_name': search_res[i]['name'].strip(),
+                          'old_price': search_res[i]['priceData']['oldPrice']['value'],
+                          'discount_price': search_res[i]['priceData']['currentPrice']['value'],
+                        }
+                else:
+                    yield{'item_name': search_res[i]['name'].strip(),
+                          'low_price': search_res[i]['priceData']['currentPrice']['value'],
+                        }
+
+
+class PrimaSpider(scrapy.Spider):
+    name = 'prima'
+
+    start_urls = ['https://www.prima-namjestaj.hr/dnevni-boravak/kutne-garniture.html?am_on_sale=1',
+                  'https://www.prima-namjestaj.hr/blagovaonica/stolovi.html?am_on_sale=1'
+                 ]
+
+    custom_settings = { 'FEEDS': {'prima_result.json': {'format': 'json', 'overwrite': True}}}
+
+    def parse(self, response):
+        for kutne in response.css('div.product-item-info'):
+            yield{'item_name': kutne.css('a.product-item-link::text').get().strip(),
+                  'action_price': kutne.css('span.price::text').get(),
+                 }
+
+
+class HarveySpider(scrapy.Spider):
+    name = 'harvey'
+
+    start_urls = ['https://www.harveynorman.hr/namjestaj/sjedece-garniture/kutne-garniture-tkanina?pomocni_lezaj=1']
+
+    custom_settings = { 'FEEDS': {'harvey_result.json': {'format': 'json', 'overwrite': True}}}
+
+    def parse(self, response):
+        for kutne in response.css('div.product-item-info'):
+            if kutne.css('div.discount.procent'):
+                yield{'item_name': kutne.css('a.product-item-link::text').get().strip(),
+                     }
+
+        next_page = response.css('a.action.next').attrib['href']
+        if next_page is not None:
+            yield response.follow(next_page, callback=self.parse)
+
 
 # process = CrawlerProcess()
 # process.crawl(MySpider1)
