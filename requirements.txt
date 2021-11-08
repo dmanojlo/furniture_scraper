@@ -5,6 +5,7 @@ constantly==15.1.0
 cryptography==35.0.0
 cssselect==1.1.0
 h2==3.2.0
+herokuify-scrapyd==1.0
 hpack==3.0.0
 hyperframe==5.2.0
 hyperlink==21.0.0
@@ -22,7 +23,6 @@ pyasn1-modules==0.2.8
 pycparser==2.20
 PyDispatcher==2.0.5
 pyOpenSSL==21.0.0
-pywin32==302
 queuelib==1.6.2
 Scrapy==2.5.0
 scrapyd==1.2.1
